@@ -1,112 +1,132 @@
-function getExpenses() {
-  return JSON.parse(localStorage.getItem('expenses')) || [];
-}
+//1
+const balance = document.getElementById(
+  "balance"
+);
+const money_plus = document.getElementById(
+  "money-plus"
+);
+const money_minus = document.getElementById(
+  "money-minus"
+);
+const list = document.getElementById("list");
+const form = document.getElementById("form");
+const text = document.getElementById("text");
+const amount = document.getElementById("amount");
+// const dummyTransactions = [
+//   { id: 1, text: "Flower", amount: -20 },
+//   { id: 2, text: "Salary", amount: 300 },
+//   { id: 3, text: "Book", amount: -10 },
+//   { id: 4, text: "Camera", amount: 150 },
+// ];
 
-// Function to save expenses to local storage
-function saveExpenses(expenses) {
-  localStorage.setItem('expenses', JSON.stringify(expenses));
-}
+// let transactions = dummyTransactions;
 
-// Function to add a new expense
-function addExpense(amount, description, category) {
-  const expense = {
-    id: new Date().getTime(),
-    amount: parseFloat(amount),
-    description: description,
-    category: category,
-  };
+//last 
+const localStorageTransactions = JSON.parse(localStorage.getItem('transactions'));
 
-  const expenses = getExpenses();
-  expenses.push(expense);
-  saveExpenses(expenses);
-  displayExpenses();
-}
+let transactions = localStorage.getItem('transactions') !== null ? localStorageTransactions : [];
 
-// Function to remove an expense by its ID
-function removeExpense(id) {
-  const expenses = getExpenses().filter((expense) => expense.id !== id);
-  saveExpenses(expenses);
-  displayExpenses();
-}
-
-// Function to edit an expense by its ID
-function editExpense(id, amount, description, category) {
-  const expenses = getExpenses().map((expense) => {
-    if (expense.id === id) {
-      return {
-        ...expense,
-        amount: parseFloat(amount),
-        description: description,
-        category: category,
-      };
-    }
-    return expense;
-  });
-  saveExpenses(expenses);
-  displayExpenses();
-}
-
-// Function to display expenses in the table
-function displayExpenses() {
-  const expenses = getExpenses();
-  const tableBody = document.getElementById('expense-table-body');
-  tableBody.innerHTML = '';
-
-  expenses.forEach((expense) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${expense.amount}</td>
-      <td>${expense.description}</td>
-      <td>${expense.category}</td>
-      <td>
-        <button class="btn btn-primary btn-sm" onclick="editExpenseModal(${expense.id})">Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="removeExpense(${expense.id})">Remove</button>
-      </td>
-    `;
-    tableBody.appendChild(row);
-  });
-}
-
-// Function to open the edit expense modal with existing data
-function editExpenseModal(id) {
-  const expense = getExpenses().find((expense) => expense.id === id);
-  if (expense) {
-    const amountInput = document.getElementById('edit-amount');
-    const descriptionInput = document.getElementById('edit-description');
-    const categoryInput = document.getElementById('edit-category');
-
-    amountInput.value = expense.amount;
-    descriptionInput.value = expense.description;
-    categoryInput.value = expense.category;
-
-    const saveEditBtn = document.getElementById('save-edit-btn');
-    saveEditBtn.onclick = function () {
-      editExpense(id, amountInput.value, descriptionInput.value, categoryInput.value);
-      $('#editExpenseModal').modal('hide');
-    };
-
-    $('#editExpenseModal').modal('show');
-  }
-}
-
-// Handle form submission for adding expenses
-document.getElementById('expense-form').addEventListener('submit', function (e) {
+//5
+//Add Transaction
+function addTransaction(e){
   e.preventDefault();
-  const amountInput = document.getElementById('amount');
-  const descriptionInput = document.getElementById('description');
-  const categoryInput = document.getElementById('category');
+  if(text.value.trim() === '' || amount.value.trim() === ''){
+    alert('please add text and amount')
+  }else{
+    const transaction = {
+      id:generateID(),
+      text:text.value,
+      amount:+amount.value
+    }
 
-  const amount = amountInput.value;
-  const description = descriptionInput.value;
-  const category = categoryInput.value;
+    transactions.push(transaction);
 
-  if (amount && description && category) {
-    addExpense(amount, description, category);
-    amountInput.value = '';
-    descriptionInput.value = '';
-    categoryInput.value = '';
+    addTransactionDOM(transaction);
+    updateValues();
+    updateLocalStorage();
+    text.value='';
+    amount.value='';
   }
-});
+}
 
-// Initial display of expenses on page load
-displayExpenses();
+
+//5.5
+//Generate Random ID
+function generateID(){
+  return Math.floor(Math.random()*1000000000);
+}
+
+//2
+
+//Add Trasactions to DOM list
+function addTransactionDOM(transaction) {
+  //GET sign
+  const sign = transaction.amount < 0 ? "-" : "+";
+  const item = document.createElement("li");
+
+  //Add Class Based on Value
+  item.classList.add(
+    transaction.amount < 0 ? "minus" : "plus"
+  );
+
+  item.innerHTML = `
+    ${transaction.text} <span>${sign}${Math.abs(
+    transaction.amount
+  )}</span>
+    <button class="delete-btn" onclick="removeTransaction(${transaction.id})">x</button>
+    `;
+  list.appendChild(item);
+}
+
+//4
+
+//Update the balance income and expence
+function updateValues() {
+  const amounts = transactions.map(
+    (transaction) => transaction.amount
+  );
+  const total = amounts
+    .reduce((acc, item) => (acc += item), 0)
+    .toFixed(2);
+  const income = amounts
+    .filter((item) => item > 0)
+    .reduce((acc, item) => (acc += item), 0)
+    .toFixed(2);
+  const expense =
+    (amounts
+      .filter((item) => item < 0)
+      .reduce((acc, item) => (acc += item), 0) *
+    -1).toFixed(2);
+
+    balance.innerText=`$${total}`;
+    money_plus.innerText = `$${income}`;
+    money_minus.innerText = `$${expense}`;
+}
+
+
+//6 
+
+//Remove Transaction by ID
+function removeTransaction(id){
+  transactions = transactions.filter(transaction => transaction.id !== id);
+  updateLocalStorage();
+  Init();
+}
+//last
+//update Local Storage Transaction
+function updateLocalStorage(){
+  localStorage.setItem('transactions',JSON.stringify(transactions));
+}
+
+//3
+
+//Init App
+function Init() {
+  list.innerHTML = "";
+  transactions.forEach(addTransactionDOM);
+  updateValues();
+}
+
+Init();
+
+form.addEventListener('submit',addTransaction);
