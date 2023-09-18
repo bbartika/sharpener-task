@@ -1,138 +1,129 @@
 
-  //1
-const balance = document.getElementById(
-    "balance"
-  );
-  const money_plus = document.getElementById(
-    "money-plus"
-  );
-  const money_minus = document.getElementById(
-    "money-minus"
-  );
-  const list = document.getElementById("list");
-  const form = document.getElementById("form");
-  const text = document.getElementById("text");
-  const amount = document.getElementById("amount");
-  // const dummyTransactions = [
-  //   { id: 1, text: "Flower", amount: -20 },
-  //   { id: 2, text: "Salary", amount: 300 },
-  //   { id: 3, text: "Book", amount: -10 },
-  //   { id: 4, text: "Camera", amount: 150 },
-  // ];
-  
-  // let transactions = dummyTransactions;
-  
-  //last 
-  const localStorageTransactions = JSON.parse(localStorage.getItem('transactions'));
-  
-  let transactions = localStorage.getItem('transactions') !== null ? localStorageTransactions : [];
-  
-  //5
-  //Add Transaction
-  function addTransaction(e){
-    e.preventDefault();
-    if(text.value.trim() === '' || amount.value.trim() === ''){
-      alert('please add text and amount')
-    }else{
-      const transaction = {
-        id:generateID(),
-        text:text.value,
-        amount:+amount.value
-      }
-  
-      transactions.push(transaction);
-  
-      addTransactionDOM(transaction);
-      updateValues();
-      updateLocalStorage();
-      text.value='';
-      amount.value='';
+ function validateForm(){
+    var expense=document.getElementById("expense").value;
+    var description=document.getElementById("description").value;
+    var category=document.getElementById("category").value;
+
+    if(expense=="")
+    {
+        alert("expension is required");
+        return false;
     }
-  }
-  
-  
-  //5.5
-  //Generate Random ID
-  function generateID(){
-    return Math.floor(Math.random()*1000000000);
-  }
-  
-  //2
-  
-  //Add Trasactions to DOM list
-  function addTransactionDOM(transaction) {
-    //GET sign
-    const sign = transaction.amount < 0 ? "-" : "+";
-    const item = document.createElement("li");
-  
-    //Add Class Based on Value
-    item.classList.add(
-      transaction.amount < 0 ? "minus" : "plus"
-    );
-  
-    item.innerHTML = `
-      ${transaction.text} <span>${sign}${Math.abs(
-      transaction.amount
-    )}</span>
-      <button class="delete-btn" onclick="removeTransaction(${transaction.id})">x</button>
-      `;
-    list.appendChild(item);
-  }
-  
-  //4
-  
-  //Update the balance income and expence
-  function updateValues() {
-    const amounts = transactions.map(
-      (transaction) => transaction.amount
-    );
-    const total = amounts
-      .reduce((acc, item) => (acc += item), 0)
-      .toFixed(2);
-    const income = amounts
-      .filter((item) => item > 0)
-      .reduce((acc, item) => (acc += item), 0)
-      .toFixed(2);
-    const expense =
-      (amounts
-        .filter((item) => item < 0)
-        .reduce((acc, item) => (acc += item), 0) *
-      -1).toFixed(2);
-  
-      balance.innerText=`$${total}`;
-      money_plus.innerText = `$${income}`;
-      money_minus.innerText = `$${expense}`;
-  }
-  
-  
-  //6 
-  
-  //Remove Transaction by ID
-  function removeTransaction(id){
-    transactions = transactions.filter(transaction => transaction.id !== id);
-    updateLocalStorage();
-    Init();
-  }
-  //last
-  //update Local Storage Transaction
-  function updateLocalStorage(){
-    localStorage.setItem('transactions',JSON.stringify(transactions));
-  }
-  
-  //3
-  
-  //Init App
-  function Init() {
-    // At first clear everything from the list History
-    list.innerHTML = "";
+    if(description=="")
+    {
+        alert("description is required");
+        return false;
+    }
+    if(category=="")
+    {
+        alert("category is required");
+        return false;
+    }
 
-    //Now after clearing History list run addTransactionDOM functionfor every transaction From transactions,so addTransactionDOM will run depends on how many transaction is left after deleting item.ADD list items in History
-    transactions.forEach(addTransactionDOM);
+    return true;
+}
+function showData(){
+    var expenseList;
+    if(localStorage.getItem("expenseList") == null){
+        expenseList=[];
+    }
+    else{
+        expenseList=JSON.parse(localStorage.getItem("expenseList"));
+    }
+    var html="";
 
-    // Now update values and update Balance,Income,Expense
-    updateValues();
-  }
-  
-  Init();
-  
-  form.addEventListener('submit',addTransaction);
+    expenseList.forEach(function(element,index){
+        html+="<tr>";
+        html+="<td>" +element.expense +"</td>";
+        html+="<td>" +element.description +"</td>";
+        html+="<td>" +element.category +"</td>";
+        html+='<td><button onclick="deleteData(' + index + ')" class="btn btn-danger">Delete</button><button onclick="updateData('+index+')" class="btn btn-warning m-2">Edit</button></td>';
+        html+= "</tr>";
+        
+    });
+    document.querySelector("#expenseTable tbody").innerHTML = html;
+}
+
+document.onload=showData();
+
+function AddData(){
+    if(validateForm()==true){
+        var expense=document.getElementById("expense").value;
+        var description=document.getElementById("description").value;
+        var category=document.getElementById("category").value;
+
+        var expenseList;
+        if(localStorage.getItem("expenseList") == null){
+            expenseList=[];
+        }
+        else{
+            expenseList=JSON.parse(localStorage.getItem("expenseList"));
+        }
+
+        expenseList.push({
+            expense:expense,
+            description:description,
+            category:category,
+        });
+
+        localStorage.setItem("expenseList",JSON.stringify(expenseList));
+
+        showData();
+
+        document.getElementByIdf("expense").value="";
+        document.getElementById("description").value="";
+        document.getElementById("category").value="";
+    }
+}
+function deleteData(index){
+        var expenseList;
+        if(localStorage.getItem("expenseList") == null){
+            expenseList=[];
+        }
+        else{
+            expenseList=JSON.parse(localStorage.getItem("expenseList"));
+        }
+
+        expenseList.splice(index,1);
+        localStorage.setItem("expenseList",JSON.stringify(expenseList));
+        showData();
+
+}
+
+function updateData(index){
+     document.getElementById("Submit").style.display="none";
+     document.getElementById("Update").style.display="block";
+     var expenseList;
+        if(localStorage.getItem("expenseList") == null){
+            expenseList=[];
+        }
+        else{
+            expenseList=JSON.parse(localStorage.getItem("expenseList"));
+        }
+
+        document.getElementById("expense").value=expenseList[index].expense;
+        document.getElementById("description").value=expenseList[index].description;
+        document.getElementById("category").value=expenseList[index].category;
+
+
+        document.querySelector("#Update").onclick=function(){
+
+            if(validateForm()==true){
+                expenseList[index].expense=document.getElementById("expense").value;
+                expenseList[index].description=document.getElementById("description").value;
+                expenseList[index].category=document.getElementById("category").value;
+
+                localStorage.setItem("expenseList",JSON.stringify(expenseList));
+
+                showData();
+
+                document.getElementByIdf("expense").value="";
+                document.getElementById("description").value="";
+                document.getElementById("category").value="";
+
+
+                document.getElementById("Submit").style.display="block";
+                document.getElementById("Update").style.display="none";
+            }
+        }
+}
